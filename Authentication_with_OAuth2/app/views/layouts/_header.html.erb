@@ -1,0 +1,10 @@
+<meta charset="utf-8">
+  <title>The World's Best Sticky Notes App Ever!</title>
+  <%= csrf_meta_tags %>
+  
+  <% if current_user %>
+  <%= render "pages/header_sticky_notes" %>
+  <% else %>
+  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  <% end %>

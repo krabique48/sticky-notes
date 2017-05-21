@@ -1,0 +1,278 @@
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.4.4.min.js" http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/base/jquery-ui.css></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.7/jquery-ui.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/themes/base/jquery-ui.css">
+
+
+
+    <style type="text/css">
+        #notes {}
+        
+        .sticky-note {
+            height: 200px;
+            width: 200px;
+            color: #7f6c04;
+            background: #FFFFA3;
+            border-radius: 10px;
+            border: 0px;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.4);
+            position: absolute;
+        }
+        
+        .contents {
+            background: #FFFFA3;
+            padding: 10px;
+            outline: none;
+            overflow-y: auto;
+            overflow-x: hidden;
+            width: 160px;
+            height: 130px;
+        }
+        
+        .handle {
+            cursor: move;            
+            background: #FFFFA3;
+            border-radius: 8px 8px 0px 0px;
+            width: auto;
+            height: 18px;
+        }
+        
+        .handle .close {
+            cursor: pointer;
+            width: 6px;
+            height: 6px;
+        }
+        
+        #save {
+            margin-left: 7px;
+        }
+        
+        html body .sticky-note div.close {
+            color: #3d3402;
+            opacity: 1;
+            text-shadow: 1px 0px 1px #a08805;
+            padding: 2px;
+        }
+        /* these are for the color buttons */
+        
+        .column {
+            display: inline-block;
+        }
+        
+        .color-choice {
+            font-size: x-large;
+            cursor: pointer;
+        }
+        
+        .color-choice-green {
+            color: darkseagreen;
+        }
+        
+        .color-choice-red {
+            color: coral;
+        }
+        
+        .color-choice-blue {
+            color: cornflowerblue;
+        }
+        
+        .color-choice-yellow {
+            color: #f9e055;
+        }
+
+    </style>
+
+
+    <script type='text/javascript'>
+        //<![CDATA[
+        var x, y;
+        var newStickerID = 0;
+        
+        var firstLoad = true;
+        $(window)
+            .dblclick(function(e) {
+                x = e.pageX;
+                y = e.pageY;
+                $('#new').click();
+                tryAutoSave();
+            })
+            .load(function() {
+                
+                // JSON with onload array data for stickers
+                var onLoadJson = <%= @onLoadJson.to_json.html_safe %>;
+                
+                zIndex = 10;
+                $('#new').click(function(e) {
+                    if (!firstLoad) {
+                    newStickerID++;
+                    $('#notes')
+                        .append('\
+            <div class="sticky-note-pre ui-widget-content" id="' + newStickerID + '">\
+                <div class="handle"><div class="close">&nbsp;&times;</div></div>\
+                <div contenteditable class="contents">Write your note here!</div>\
+                <div class="color-choice row"><div class="color-choice-green column">&#8226</div><div class="color-choice-red column">&#8226</div><div class="color-choice-blue column">&#8226</div><div class="color-choice-yellow column">&#8226</div></div>\
+            </div>\
+         ')
+                    }
+                    firstLoad = false;
+                    
+                    $('#notes')
+                        .find('.sticky-note-pre')
+                        .offset({
+                            top: y,
+                            left: x
+                        })
+                        //otherwise, deletion of a code-wise higer
+                        //div (e.g. older div) will cause the lower 
+                        //ones to change their "top" positioning
+                        .css("position", "absolute")
+                        .end()
+                    //.do something else to $('#notes')
+                    ;
+                    $('.sticky-note-pre')
+                        .draggable({
+                            handle: '.handle'
+                        })
+                        .resizable({
+                            resize: function() {
+                                var n = $(this);
+                                n.find('.contents').css({
+                                    "width": n.width() - 40,
+                                    "height": n.height() - 70
+                                });
+                                tryAutoSave();
+                            }
+                        })
+                        .bind('click hover focus mousedown', function() {
+                            $(this)
+                                .css('zIndex', zIndex++)
+                                .find('.ui-icon')
+                                .css('zIndex', zIndex++)
+                                .end();
+                                tryAutoSave();
+                        })
+                        .find('.close')
+                        .click(function() {
+                            $(this).parents('.sticky-note').remove();
+                            tryAutoSave();
+                        })
+                        .end()
+
+                        .find('.color-choice-green')
+                        .click(function() {
+                            $(this).parents('.sticky-note').children('.contents, .color-choice, .handle').css("background", "#B0FFBD");
+                            $(this).parents('.sticky-note').css("background", "#B0FFBD");
+                            tryAutoSave();
+                        })
+                        .end()
+
+                        .find('.color-choice-red')
+                        .click(function() {
+                            $(this).parents('.sticky-note').children('.contents, .color-choice, .handle').css("background", "#FFA8A8");
+                            $(this).parents('.sticky-note').css("background", "#FFA8A8");
+                            tryAutoSave();
+                        })
+                        .end()
+
+                        .find('.color-choice-blue')
+                        .click(function() {
+                            $(this).parents('.sticky-note').children('.contents, .color-choice, .handle').css("background", "#B8C1FF");
+                            $(this).parents('.sticky-note').css("background", "#B8C1FF");
+                            tryAutoSave();
+                        })
+                        .end()
+
+                        .find('.color-choice-yellow')
+                        .click(function() {
+                            $(this).parents('.sticky-note').children('.contents, .color-choice, .handle').css("background", "#FFFFA3");
+                            $(this).parents('.sticky-note').css("background", "#FFFFA3");
+                            tryAutoSave();
+                        })
+                        .end()
+                        
+                        //autosave notes text on change here
+                        .find('.contents')
+                        .bind("DOMSubtreeModified", function(){
+                            tryAutoSave();
+                        })
+                        .end()
+
+                        .addClass('sticky-note')
+                        .removeClass('sticky-note-pre');
+                });                
+
+                //creating JSON here
+                $('#save').click(function createJSON() {
+                    var jsonAllNotes = [];
+                    $(".sticky-note").each(function() {                        
+                        item = {}
+                        item["uid"] = "<%= current_user.uid %>"
+                        item["note_id"] = $(this).attr("id");
+                        item["text"] = $(this).find('.contents').html();          
+                        
+                        item["top_side"] = $(this).css("top");
+                        item["left_side"] = $(this).css("left");
+                        item["width"] = $(this).css("width");
+                        item["height"] = $(this).css("height");
+                        item["color"] = $(this).css("background-color");
+                        item["zindex"] = $(this).css("z-index");
+                        
+                        jsonAllNotes.push(item);
+                    });
+
+                    var notesJSONString = JSON.stringify(jsonAllNotes);
+                    console.log(notesJSONString);
+                    
+                    $.ajax({
+                        url : "/notes",
+                        type : "post",
+                        data : { data_value: notesJSONString }
+                    });
+                });                
+                
+                
+                //create notes here
+                console.log(onLoadJson);
+                onLoadJson.forEach(function(item, index){
+                    console.log(onLoadJson[index].text);
+                    if (zIndex < onLoadJson[index].zindex) zIndex = onLoadJson[index].zindex + 2;
+                    newStickerID++;
+                    var widthForContents = parseInt(onLoadJson[index].width) - 40;
+                    var heightForContents = parseInt(onLoadJson[index].height) - 70;
+                    $('#notes')
+                        .append('\
+            <div class="sticky-note-pre ui-widget-content" id="' + onLoadJson[index].note_id + '" style="background: ' + onLoadJson[index].color + '; top: ' + onLoadJson[index].top_side + '; left: ' + onLoadJson[index].left_side + '; width: ' + onLoadJson[index].width + '; height: ' + onLoadJson[index].height + '; z-index: ' + onLoadJson[index].zindex + ';">\
+                <div class="handle" style="background: ' + onLoadJson[index].color + ';"><div class="close">&nbsp;&times;</div></div>\
+                <div contenteditable class="contents" style="background: ' + onLoadJson[index].color + '; width: ' + widthForContents + 'px; height: ' + heightForContents + 'px;">' + onLoadJson[index].text + '</div>\
+                <div class="color-choice row" style="background: ' + onLoadJson[index].color + '"><div class="color-choice-green column">&#8226</div><div class="color-choice-red column">&#8226</div><div class="color-choice-blue column">&#8226</div><div class="color-choice-yellow column">&#8226</div></div>\
+            </div>\
+                        ');
+                    
+                    
+                    
+                });
+                //this is done to apply all the dynamic shit from new button
+                $('#new').click();
+            }); 
+            
+            var newChange = false;
+            var timer;
+            function autoSaveSemaphore() {
+                var timeToWait = 3000;
+                if (newChange) {
+                    if (timer != null) clearTimeout(timer);
+                    newChange = false;
+                }
+                timer = setTimeout(function() {
+                    $('#save').click();
+                }, 3000);
+            }
+            
+            function tryAutoSave() {
+                newChange = true;
+                autoSaveSemaphore();
+            }
+            //]]>
+    </script>
+    

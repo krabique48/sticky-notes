@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <%= render "layouts/header" %>
+  
+</head>
+<body>
+
+
+    
+      <% if current_user %>
+        <%= button_to 'Log Out', logout_path, method: :delete %>
+        <%= yield %>
+      <% else %>
+      <div id="navbar">
+      <nav class="navbar navbar-inverse">
+  <div class="container">
+    <div class="navbar-header">
+      <div class='navbar-brand'>World's Best Sticky Notes App</div>
+    </div>
+        <ul class="nav navbar-nav">
+          <li><%= link_to 'Twitter', '/auth/twitter' %></li>
+          <li><%= link_to 'Facebook', '/auth/facebook' %></li>
+          <li><%= link_to 'Google+', '/auth/google' %></li>
+          <li><%= link_to 'LinkedIn', '/auth/linkedin' %></li>
+          <li><%= link_to 'VKontakte', '/auth/vkontakte' %></li>
+        </ul>
+      
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <% flash.each do |key, value| %>
+    <div class="alert alert-<%= key %>">
+      <%= value %>
+    </div>
+  <% end %>
+    
+
+  <%= yield %>
+</div>
+
+<div id="footer">
+  <div class="container">
+    <p class="text-muted">Helped to create by <a href="http://bodrovis.tech" 
+    target="_blank">Radiant Wind</a> with some truly enormous effort from a 
+    student of ITransition who really (REALLY) wants a job, 
+    <a href="https://www.linkedin.com/in/oleg-gavrilenya-666714139/"
+    target="_blank">
+      Oleg Gavrilenya.</a></p>
+  </div>
+</div>
+<% end %>
+
+</body>
+</html>
